@@ -7,7 +7,7 @@
  *  Failnet -- PHP-based IRC Bot
  *-------------------------------------------------------------------
  *	Script info:
- * Version:		1.0.0
+ * Version:		1.0.1
  * SVN ID:		$Id$
  * Copyright:	(c) 2009 - Obsidian
  * License:		http://opensource.org/licenses/gpl-2.0.php  |  GNU Public License v2
@@ -46,7 +46,7 @@
  * @ignore
  */
 define('IN_FAILNET', true);
-define('FAILNET_VERSION', '1.0.0'); 
+define('FAILNET_VERSION', '1.0.1'); 
 
 $failnet = new failnet();
 
@@ -83,7 +83,6 @@ $load = array(
 	'xkcd',
 	'reload',
 /*
-	'dict',
 	'alchemy',
 	'notes',
 	'markov',
@@ -104,7 +103,7 @@ echo '- Loading configuration file for specified IRC server' . failnet::NL; $fai
 echo '- Loading ignored users list' . failnet::NL; $failnet->ignore = explode(', ', file_get_contents('data/ignore_users'));
 
 // In case of restart/reload, to prevent 'Nick already in use' (which asplodes everything)
-echo 'Preparing to connect...' . failnet::NL; sleep(2);
+echo 'Preparing to connect...' . failnet::NL; sleep(1);
 
 // Initiate the beast!  Run, Failnet, RUN!
 echo 'Failnet loaded and ready!' . failnet::NL;
@@ -131,7 +130,7 @@ class failnet
 	public $owner = '';
 	public $nick = '';
 	public $pass = '';
-	public $user = '';
+	public $user = 'Failnet';
 	public $name = 'Failnet';
 	
 	// DO NOT SET.
@@ -247,21 +246,21 @@ class failnet
 			// Fun stuff!
 			if ($this->joined)
 			{
-				if (ereg('KICK ' . $str[1][0][0] . ' ' . $this->nick . ' :', $srvmsg))
+				if (isset($str[1][2]) && $str[1][2] != $this->nick && preg_match('/^(.*)KICK ' . preg_quote($str[1][2]) . ' ' . preg_quote($this->nick) . '(.*)$/i', $srvmsg))
 				{
 					$kicked = $this->cycle;
-					echo '-!- Kicked from ' . $str[1][0][0] . '!' . self::NL;
-					$this->log('--- Kicked from channel "' . $str[1][0][0] . '" ---');
+					if(!$this->debug) echo '-!- Kicked from ' . $str[1][2] . ' by ' . $str[1][0][0] . '!' . self::NL;
+					$this->log('--- Kicked from channel "' . $str[1][2] . '" by ' . $str[1][0][0] . ' ---');
 					
 					// Remove this channel from the joined channels list!
 					$chans_ = array_flip($this->chans);
-					unset($this->chans[$chans_[$str[1][0][0]]]);
+					unset($this->chans[$chans_[$str[1][2]]]);
 				}
 				if (file_get_contents('data/eternalrampage')=='yesh') rampage(0); // Because I feel evil.
 				if (!empty($this->pass)) $this->privmsg('IDENTIFY ' . $this->pass, 'NickServ'); unset($this->pass);
 				if (!$introduced)
 				{
-					sleep(2);
+					usleep(500);
 					foreach ($this->chans as $chan_)
 					{
 						$this->log('--- Joining channel "' . $chan_ . '" ---');
@@ -533,7 +532,7 @@ class failnet
 		}
 		if(!$this->debug) echo '-!- Quitting from server "' . $this->server . '"' . self::NL;
 		$this->log('--- Quitting from server "' . $this->server . '" ---');
-		$this->send_server('QUIT');
+		$this->send_server('QUIT :Failnet PHP IRC Bot');
 		$this->terminate($restart);
 	}
 	
@@ -846,7 +845,7 @@ class failnet
 		{
 			foreach($this->ignore as $id => &$user)
 			{
-				if($user == $matches[1]) unset($this->ignore[$id]);
+				if($user == $victim) unset($this->ignore[$id]);
 			}
 			file_put_contents('data/ignore_users', implode(', ', $this->ignore));
 			$this->privmsg('User "' . $victim . '" is no longer ignored.');

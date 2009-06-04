@@ -6,8 +6,8 @@
 ^\|silentdeath$ >> (function) >> silentdeath(1);
 ^\|silentreload$ >> (function) >> silentdeath(0);
 ^\|silentfail$ >> _action_is silently failing.
-^\|leave (.+)$ >> (function) >> $this->part($sender, $matches[1]);
-^\|part (.+)$ >> (function) >> $this->part($sender, $matches[1]);
+^\|leave (.*)$ >> (function) >> $this->part($sender, $matches[1]);
+^\|part (.*)$ >> (function) >> $this->part($sender, $matches[1]);
 ^\|dai$ >> (function) >> $this->dai($sender);
 ^\|auth (.+)$ >> (function) >> $this->auth($sender, $matches[1]);
 ^\|adduser (.+)$ >> (function) >> $this->privmsg('I will try adding '.$sender.' with a pw of '.sha1($matches[1]).' to the DB'); $this->adduser($sender, $matches[1]);
