@@ -446,7 +446,15 @@ class failnet
 		{
 			// Remove this channel from the joined channels list!
 			$chans_ = array_flip($this->chans);
-			unset($this->chans[$chans_[$toleave]]);
+			if(isset($this->chans[$chans_[$toleave]]))
+			{
+				unset($this->chans[$chans_[$toleave]]);
+			}
+			else
+			{
+				$this->privmsg('I\'m sorry, but I can\'t part a channel I\'m not in.');
+				return;
+			}
 			
 			$this->privmsg('Bai baiii!', $toleave);
 			// Write to our log.  ;)
