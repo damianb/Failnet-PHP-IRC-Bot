@@ -444,10 +444,10 @@ class failnet
 	{
 		if ($this->authlevel($sender) > 4)
 		{
-			foreach ($this->chans as &$chan)
-			{
-				if ($chan == $toleave) unset($chan);
-			}
+			// Remove this channel from the joined channels list!
+			$chans_ = array_flip($this->chans);
+			unset($this->chans[$chans_[$toleave]]);
+			
 			$this->privmsg('Bai baiii!', $toleave);
 			// Write to our log.  ;)
 			$this->log('--- Leaving channel "' . $toleave . '" ---');
