@@ -36,7 +36,6 @@
 ^\|$ >> (function) >> if (file_get_contents("data/instantauth")=="yesh") { $this->instauth($sender); } else { $this->deny(); }
 ^\|ia$ >> (function) >> $this->privmsg(file_get_contents("data/instantauth"));
 ^\|serv$ >> (function) >> if ($this->authlevel($sender)>1) { $this->send_server($matches[1]); }
-^\|chans$ >> (function) >> print_r($chans);
 ^\|xkcd$ >> (function) >> $this->privmsg(xkcd());
 ^\|slashdot(| (.+))$ >> (function) >> $this->privmsg(slashdot($matches));
 ^\|define (.+)$ >> (function) >> $this->privmsg(yotdict($matches[1]));
