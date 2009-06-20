@@ -3,12 +3,13 @@
 ^\|(lul|rampage|rawr)$ >> (function) >> rampage(0);
 ^\|eternalrampage$ >> (function) >> rampage(0, 1);
 ^\|deathpage$ >> (function) >> rampage(1);
-^\|silentdeath$ >> (function) >> silentdeath(1);
-^\|silentreload$ >> (function) >> silentdeath(0);
+^\|silentdeath (.*)$ >> (function) >> silentdeath($matches[1]);
+^\|silentreload$ >> (function) >> silentdeath();
 ^\|silentfail$ >> _action_is silently failing.
 ^\|leave (.*)$ >> (function) >> $this->part($sender, $matches[1]);
 ^\|part (.*)$ >> (function) >> $this->part($sender, $matches[1]);
 ^\|dai$ >> (function) >> $this->dai($sender);
+^\|nub (.*)$ >> (function) >> if($this->checkuser($matches[1])) { $this->action('looks over at '.$matches[1]); sleep(1); $this->action('slaps a "FAIL" sticker onto '.$matches[1].'\'s forehead'); sleep(2); $this->privmsg($matches[1].' is now an official nub.'); } else { $this->deny(); }
 ^\|auth (.+)$ >> (function) >> $this->auth($sender, $matches[1]);
 ^\|adduser (.+)$ >> (function) >> $this->privmsg('I will try adding '.$sender.' with a pw of '.sha1($matches[1]).' to the DB'); $this->adduser($sender, $matches[1]);
 ^\|authlevel (.+)$ >> (function) >> $this->privmsg($matches[1]." has an authority level of ".$this->authlevel($matches[1]));
@@ -16,14 +17,14 @@
 ^\|ne (.+)$ >> (function) >> $this->privmsg('S-sorry, '.$matches[1].', I can\'t give credit! Come back when you\'re a little... mmm... RICHER!');
 ^\|nick (.+)$ >> (function) >> $this->changenick($sender, $matches[1]);
 ^\|join (.+)$ >> (function) >> $this->join($sender, $matches[1]);
-^\|serv (.+)$ >> (function) >> $this->send_server($matches[1]);
+^\|serv (.+)$ >> (function) >> $this->send_server($matches[1], false);
 ^\|grape$ >> (function) >> $this->privmsg("82.098grape+0.69622carrot=5788.122660962"); $this->privmsg("123.6862carrot/617.667grape=0.2729458914702683884440223473139500717056");
 ^\|calc (.+)$ >> (function) >> calc($sender, $matches[1]);
 ^\|pws (.+)$ >> (function) >> pws($matches[1]);
 ^\|root (.+) (.+)$ >> (function) >> $this->privmsg(pow($matches[1], 1/$matches[2]));
 ^\|pow (.+)\^(.+)$ >> (function) >> $this->privmsg(bcpow((string)$matches[1], (string)$matches[2]));
 ^\|sqrt (.+)$ >> (function) >> global $store; $this->privmsg(bcsqrt(eregi_replace("store", $store, $matches[1]))); $store = bcsqrt($matches[1]);
-^\|boot$ >> (function) >> $this->action('flies OVER 9000 meters (actually '.rand(9000, 10000).' meters)'); exit(0);
+^\|boot$ >> (function) >> $this->action('flies OVER 9000 meters (actually '.rand(9000, 10000).' meters)'); $this->quit('OH SHI--', true);
 ^\|spl (.+)$ >> (function) >> if ($this->authlevel($sender)>1) { global $spl; $spl = $matches[1]; }
 ^\|store (.+)$ >> (function) >> store((float)$matches[1]);
 ^\|log (.+)$ >> (function) >> $this->searchlog($matches[1]);
@@ -38,10 +39,6 @@
 ^\|serv$ >> (function) >> if ($this->authlevel($sender)>1) { $this->send_server($matches[1]); }
 ^\|xkcd$ >> (function) >> $this->privmsg(xkcd());
 ^\|slashdot(| (.+))$ >> (function) >> $this->privmsg(slashdot($matches));
-^\|define (.+)$ >> (function) >> $this->privmsg(yotdict($matches[1]));
-^\|\+def (\[|\(|\{)(.+)(\]|\)|\}) (\[|\(|\{)(.+)(\]|\)|\})$ >> (function) >> if ($this->authlevel($sender)>0) { $this->privmsg(adddef($matches[2], $matches[5])); } else { $this->deny(); }
-^\|\-def (.+)$ >> (function) >> if ($this->authlevel($sender)>0) { $this->privmsg(minusdef($matches[1])); } else { $this->deny(); }
-^\|\:def (\[|\(|\{)(.+)(\]|\)|\}) (\[|\(|\{)(.+)(\]|\)|\})$ >> (function) >> if (authlevel($sender)>0) { $this->privmsg(changedef($matches[2], $matches[5])); } else { $this->deny(); }
 ^\|eject$ >> _action_bails out over enemy territory and shakes his fist at _sender_ >> _action_ejects >> Arrrgh!  Not again!
 ^\|add (.+)$ >> (function) >> if($this->authlevel($sender)>50){ file_put_contents('data/factoids',file_get_contents('data/factoids').self::NL.$matches[1]);}else{ $this->deny();}
 ^\|:add (.+)$ >> (function) >> if($this->authlevel($sender)>50){ file_put_contents('data/factoids_specifically_for_me',file_get_contents('data/factoids_specifically_for_me').self::NL.$matches[1]);}else{$this->deny(); }
@@ -71,15 +68,16 @@
 ^\|what(|i|\')sin (.+)$ >> (function) >> whatisin($matches[2]);
 ^\|remove (\[|\(|\{)(.+)(\]|\)|\}) (\[|\(|\{)(.+)(\]|\)|\}) from (\[|\(|\{)(.+)(\]|\)|\})$ >> (function) >> print_r($matches); removefrom($matches[2], $matches[5], $matches[8]);
 ^\|help$ >> Missing argument. Usage: |help <module> (say |modules to see all loaded, non-stealth modules)
-^\|help (.+)$ >> (function) >> global $modules; global $help; $flipmod = array_flip($modules); if (isset($flipmod[$matches[1]])) { $this->privmsg($help[$matches[1]]); } else { $this->privmsg("That module doesn't exist, isn't loaded, or is sekrit."); }
-^\|modules$ >> (function) >> global $modules; $this->privmsg(implode(', ', $modules));
+^\|help (.+)$ >> (function) >> global $help; $flipmod = array_flip($this->modules); if (isset($flipmod[$matches[1]])) { $this->privmsg($help[$matches[1]]); } else { $this->privmsg("That module doesn't exist, isn't loaded, or is sekrit."); }
+^\|modules$ >> (function) >> $this->privmsg(implode(', ', $this->modules));
 ^\|showdown$ >> (function) >> global $ammo,$type; $ammo = 1; $this->privmsg('Ready...'); sleep(10); $ammo = 1; $type = 'shotgun'; $this->privmsg('Fire!');
 ^\|unauth (.+)$ >> (function) >> if ($this->authlevel($sender)>24) { foreach ($this->users as &$user) { if (($user[0]==$matches[1])&&($user[3])) { unset($user[3]); return $this->privmsg(self::X02.$matches[1].self::X02.' has been unauthed.'); } } $this->privmsg(self::X02.$matches[1].self::X02.' isn\'t authed and therefore can\'t be unauthed.'); } else { $this->deny(); }
-^\|authed (.+)$ >> (function) >> foreach ($this->users as &$user) { if (($user[0]==$matches[1])&&($user[3])) { return $this->privmsg(self::X02.$matches[1].self::X02.' is '.self::X02.'authed.'.self::X02); } } $this->privmsg(self::X02.$matches[1].self::X02.' is '.self::X02.'not authed.'.self::X02);
+^\|authed (.+)$ >> (function) >> foreach ($this->users as &$user) { if (($user[0]==$matches[1])&&(isset($user[3]))) { return $this->privmsg(self::X02.$matches[1].self::X02.' is '.self::X02.'authed.'.self::X02); } } $this->privmsg(self::X02.$matches[1].self::X02.' is '.self::X02.'not authed.'.self::X02);
 ^\|sayw \[(.+)\] (.+)$ >> (function) >> $this->privmsg($matches[2], $matches[1]);
 ^\|get (.+)$ >> (function) >> $this->privmsg(getfrompastebin($matches[1]));
 ^\|action (.*) do (.*)$ >> (function) >> $this->action($matches[2], $matches[1]);
-^\|toast (.+) >> (function) >> if($this->authlevel($sender) > 0 || $this->checkuser($matches[1])){$this->send_server('NICK A_toaster'); $this->action('toasts '.$matches[1]); $this->send_server('NICK '. $this->nick);} else { $this->deny();} }
+^\|toast (.+) >> (function) >> if(($this->authlevel($sender) > 0) && ($this->checkuser($matches[1]))){ $this->send_server('NICK A_toaster'); $this->action('toasts '.$matches[1]); $this->send_server('NICK '. $this->nick);} else { $this->deny();}
+^\|km \[(.*)\] (.*) >> (function) >> if(($this->authlevel($sender) > 0) && ($this->checkuser($matches[1]))){ $this->send_server('NICK KICKMONSTER'); $this->kick($sender, $matches[2], 'KICKMONSTER GO RAWRRRRRRRR!', $matches[1]); $this->send_server('NICK '. $this->nick);} else { $this->deny();}
 ^\|\+note (\[|\(|\{)(.+)(\]|\)|\}) (\[|\(|\{)(.+)(\]|\)|\})$ >> (function) >> $this->privmsg(takenote($matches[2], $matches[5]));
 ^\|:note (.+)$ >> (function) >> $this->privmsg(getnote($matches[1]));
 ^\|namein$ >> (function) >> $this->privmsg($this->namein());
@@ -97,7 +95,15 @@
 ^\|repeat (.+) msg (.+)$ >> (function) >> $this->privmsg($matches[2], $matches[1]);
 ^\|restart$ >> (function) >> $this->reload($sender);
 ^\|dumplogs$ >> (function) >> if($this->authlevel($sender) > 24){ file_put_contents('log', ''); $this->privmsg('Log file purged.'); } else { $this->deny(); }
-^\|kick (.*) (.*)$ >> (function) >> $this->kick($sender, $matches[1], $matches[2]);
-^\|eval (.+) >> (function) >> $this->deny(); if(1=0){shmeval("_sender_ ", $matches[1]);}
+^\|kick (.*)(| )(.+)$ >> (function) >> $this->kick($sender, $matches[1], ((isset($matches[2])) ? strpos($matches[2], 1) : false));
+^\|eval (.+) >> (function) >> deny(); if(1=0){shmeval("_sender_ ", $matches[1]);}
 ^\|hug$ >> _action_glomps _sender_ >> _action_gives _sender_ a hug
 ^\|hug (.*) >> (function) >> $this->action('goes over and hugs '.$matches[1]);
+^\|roll >> Never gonna give you up
+^\|orly >> O rly?
+^\|rule (.*) >> (function) >> $this->privmsg(rule($matches[1]));
+^\|nslookup (.*) >> (function) >> global $ip, $unset; if(empty($ip)) {$ip = rand(0,255) . '.' . rand(0,255) . '.' . rand(256,288) . '.' . rand(0,255); $unset = false;} else {$unset = true;} $this->privmsg('NSLOOKUP for ' . $matches[1] . ' : ' . $ip); if(!empty($unset)) {$ip = false;}
+^\|quit >> (function) >> $this->quit('TO THE FAILMOBILE!', false);
+^\|mem$ >> (function) >> $this->privmsg(get_formatted_filesize(memory_get_usage()));
+^\|mempeak$ >> (function) >> $this->privmsg(get_formatted_filesize(memory_get_peak_usage()));
+^\|bomb (.*) >> _action_flings a grenade at $1 and runs for cover >> _action_slaps _sender_ >> I dun wanna. Make peace, not war.  DX >> _action_slings some high explosives over his back and wanders over to $1
