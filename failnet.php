@@ -82,6 +82,7 @@ $load = array(
 	'slashdot',
 	'xkcd',
 	'reload',
+	'rules',
 /*
 	'alchemy',
 	'notes',
@@ -474,17 +475,20 @@ class failnet
 	{
 		if ($this->authlevel($sender) > 4)
 		{
-			if(rand(0, 1))
+			switch (rand(0, 1))
 			{
-				$this->choose('Here\'s MY boomstick!', '*PUNT*');
-			}
-			else
-			{
-				$this->action('starts to glow');
+				case 0:
+					$this->action('punts', $where);
+				break;
+				case 1:
+					$this->privmsg('Here\'s MY boomstick!', $where);
+				break;
+				case 2:
+					$this->action('starts to glow', $where);
+				break;
 			}
 			// Write to our log.  ;)
 			$where = ($where) ? $where : $this->chan;
-			sleep(1);
 			$this->log('--- Kicking user ' . $victim . ' on channel "' . $where . '" ---');
 			if(!$this->debug) echo '-!- Kicking ' . $victim . 'from channel "' . $where . '"' . self::NL;
 			$this->send_server('KICK ' . $where . ' ' . $victim . (($msg) ? ' :' . $msg : ''));
@@ -959,7 +963,7 @@ class failnet
 	// This is best to avoid humilation if we're using an agressive factoid.  ;)
 	public function checkuser($user)
 	{
-		return ($user != $this->owner && $user != $this->nick && !preg_match('/self/i', $user)) ? true : false;
+		return (!preg_match('/' . preg_quote($this->owner) . '/is', $user) && !preg_match('/' . preg_quote($this->nick) . '/is', $user) && !preg_match('/self/is', $user)) ? true : false;
 	}
 	
 	// Check the logs for something..
@@ -975,10 +979,10 @@ class failnet
 
 	// Write an event to the log.
 	public function add_log($log, $sender, $where = false)
-	{
+	{x
 		if(preg_match('/^IDENTIFY (.*)/i', $log)) $log = 'IDENTIFY ***removed***';
 		$log = (preg_match('/' . self::NL . '(| )$/i', $log)) ? substr($log, 0, strlen($log) - 1) : $log;
-		$this->log(@date('D m/d/Y - h:i:s A') . ' <' . $sender . (($where) ? '/' . $where : false) . '> ' . preg_replace('/^' . self::X01 . 'ACTION (.+)' . self::X01 . '$/', '*'. $sender . ' $1' . '*', $log));
+		$this->log(@date('D m/d/Y - h:i:s A') . ' <' . $sender . (($where) ? '/' . $where : false) . '> ' . preg_replace('/^' . self::X01 . 'ACTION (.+)' . self::X01 . '$/is', '*'. $sender . ' $1' . '*', $log));
 	}
 	
 	// Write something to the log.
@@ -1083,6 +1087,23 @@ function rampage($exit = 0, $eternal = 0)
 	$failnet->terminate($exit);
 }
 
+/**
+* Return formatted string for filesizes
+*/
+function get_formatted_filesize($bytes)
+{
+	if ($bytes >= pow(2, 30))
+		return round($bytes / 1024 / 1024 / 1024, 2) . ' GiB';
+
+	if ($bytes >= pow(2, 20))
+		return round($bytes / 1024 / 1024, 2) . ' MiB';
+
+	if ($bytes >= pow(2, 10))
+		return round($bytes / 1024, 2) . ' KiB';
+
+	return $bytes . ' B';
+}
+
 // THE PAAAAIN! Results in death for Failnet due to excess flood.
 function silentdeath()
 {
@@ -1105,237 +1126,5 @@ function remove_p($s,$lower=0) {
 	if ($lower) return strtolower(preg_replace('/[^a-zA-Z0-9-\s]/', '', $s));
 	return preg_replace('/[^a-zA-Z0-9]/', '', $s);
 }
-
-/**
- * Table stuffs.  O_o
- */
-
-function renamerow($table, $row, $newname) {
-	if (!is_file("tables/$table")) {
-		return false;
-	}
-	$final = simplexml_load_file("tables/$table");
-	foreach ($final->row as $foo) {
-		if ($row == (string)$foo['name']) {
-			$foo['name'] = $newname;
-		}
-	}
-	$fh = fopen("tables/$table", 'w');
-	if (flock($fh, LOCK_EX)) {
-		$return = fwrite($fh, trim(preg_replace('/\/\>'."\n".'/', ' />'."\n", preg_replace('/'."\t\n".'/', "\n", str_replace("\n\t\n", "\n", preg_replace('/'."\t".'\<table/', '<table', preg_replace('/\<\/table\>/', "\n</table>", preg_replace("/\n\</", "\n\t<", str_replace("\n\n", "\n", $final->asXML())))))))));
-		flock($fh, LOCK_UN);
-		fclose($fh);
-		return $return;
-	} else {
-		return false;
-	}
-}
-function deleterow($table, $row) {
-	if (!is_file("tables/$table")) {
-		return false;
-	}
-	$final = simplexml_load_file("tables/$table");
-	$i=0;
-	foreach ($final->row as $foo) {
-		if ($row == (string)$foo['name']) {
-			unset($final->row[$i]);
-		}
-		$i++;
-	}
-	$fh = fopen("tables/$table", 'w');
-	if (flock($fh, LOCK_EX)) {
-		$return = fwrite($fh, trim(preg_replace('/\/\>'."\n".'/', ' />'."\n", preg_replace('/'."\t\n".'/', "\n", str_replace("\n\t\n", "\n", preg_replace('/'."\t".'\<table/', '<table', preg_replace('/\<\/table\>/', "\n</table>", preg_replace("/\n\</", "\n\t<", str_replace("\n\n", "\n", $final->asXML())))))))));
-		flock($fh, LOCK_UN);
-		fclose($fh);
-		return $return;
-	} else {
-		return false;
-	}
-}
-function rows($table) {
-	if (!is_file("tables/$table")) {
-		return false;
-	}
-	$table = simplexml_load_file("tables/$table");
-	foreach ($table->row as $foo) {
-		$return[] = (string)$foo['name'];
-	}
-	return $return;
-}
-function read($table, $row) {
-	if (!is_file("tables/$table")) {
-		return false;
-	}
-	$table = simplexml_load_file("tables/$table");
-	foreach ($table->row as $foo) {
-		if ($foo['name']==$row) {
-			$bar = $foo;
-		}
-	}
-	if (!$bar) {
-		return false;
-	}
-	if ($bar['type']=='array') {
-		$baz = explode(', ', $bar['data']);
-		foreach ($baz as &$quack) {
-			$quack = explode('||', $quack);
-			foreach($quack as &$meow) {
-				$meow = base64_decode($meow);
-			}
-		}
-		return $baz;
-	} elseif($bar['type']=='list') {
-		$baz = explode(', ', $bar['data']);
-		foreach ($baz as &$quack) {
-			$quack = base64_decode($quack);
-		}
-		return $baz;
-	} else {
-		return base64_decode($bar['data']);
-	}
-}
-function write($table, $row, $data, $dontoverwrite=0) {
-	if (!is_dir('tables')) {
-		mkdir('tables');
-	}
-	$type = 'other';
-	if (is_array($data)) {
-		$type = 'list';
-		foreach ($data as $key => $val) {
-			if (!is_numeric($key)) {
-				$type = 'array';
-				last;
-			}
-		}
-	}
-	if ($type == 'array') {
-		$i = 0;
-		foreach ($data as $key=>$val) {
-			if ($i > 0) {
-				$dat.= ', ';
-			}
-			$dat .= base64_encode($key).'||'.base64_encode($val);
-			$i++;
-		}
-	} elseif($type == 'list') {
-		$i = 0;
-		foreach ($data as $bagel) {
-			if ($i > 0) {
-				$dat.= ', ';
-			}
-			$dat .= base64_encode($bagel);
-			$i++;
-		}
-	} else {
-		$dat = base64_encode($data);
-	}
-	if ((!is_file("tables/$table"))||(filesize("tables/$table")==0)) {
-		touch("tables/$table");
-		$fh = fopen("tables/$table", 'r');
-		if (flock($fh, LOCK_EX)) {
-			fwrite($fh, "tables/$table", <<<FOO
-<?xml version="1.0"?>
-<table>
-	<row name="$row" type="$type" data="$dat" />
-</table>
-FOO
-			);
-			flock($fh, LOCK_UN);
-			fclose($fh);
-		} else {
-			return false;
-		}
-	} else {
-		$xml = simplexml_load_file("tables/$table");
-		foreach ($xml->row as $foo) {
-			if ($foo['name'] == $row) {
-				if ($dontoverwrite) {
-					return false;
-				}
-				$foo['data'] = $dat;
-				$foo['type'] = $type;
-				$z=1;
-			}
-		}
-		if (!$z) {
-			$newrow = $xml->addChild('row');
-			$newrow->addAttribute('name', $row);
-			$newrow->addAttribute('type', $type);
-			$newrow->addAttribute('data', $dat);
-		}
-		$final = $xml->asXML();
-		$final = trim(preg_replace('/\/\>'."\n".'/', ' />'."\n", preg_replace('/'."\t\n".'/', "\n", str_replace("\n\t\n", "\n", preg_replace('/'."\t".'\<table/', '<table', preg_replace('/\<\/table\>/', "\n</table>", preg_replace("/\n\</", "\n\t<", str_replace("\n\n", "\n", $final))))))));
-		$fh=fopen("tables/$table", 'w');
-		if (flock($fh, LOCK_EX)) {
-			fwrite($fh, $final);
-			flock($fh, LOCK_UN);
-			fclose($fh);
-		} else {
-			return false;
-		}
-	}
-}
-
-/*
- function calc($sender, $a) {
- global $store;
- if (authlevel($sender)>1) {
- eval('privmsg('.$a.'); $store = '.$a.';');
- } else {
- deny();
- }
- }
- */
-
-/*
- function pws ($string) {
- $string = explode(')(', $string);
- $i = 0;
- foreach ($string as &$bits) {
- $bits = str_replace(array(')', '('), '', $bits);
- $bits = split('[x\^]', $bits);
- $p[$i] = bcmul($bits[0], bcpow($bits[1], $bits[2]));
- $i++;
- }
- $r = bcmul($p[0], $p[1]); // $r --> result
- if (is_nan($r)) {
- $r = 'DOES NOT COMPUTE';
- } elseif (is_infinite($r)) {
- if ($r > 0) {
- $r = 'IT\'S WAAAY OVER 9000! (infinity)';
- } else {
- $r = 'IT\'S UNDER -9000! (-infinity)';
- }
- } elseif ($r > 9000) {
- $r = 'IT\'S OVER 9000! (which is '.$r.')';
- }
- privmsg($r);
- }
- */
-
-/*
- function shmeval($sender, $a) {
- if (authlevel(substr($sender,0,strlen($sender)-1))>1) {
- eval($a);
- } else {
- deny();
- }
- }
- */
-
-/*
- function power($a, $b) {
- global $store;
- $a = eregi_replace('s', $store, $a);
- echo $a;
- }
- */
-
-/*
- function store($a) {
- global $store;
- $store = $a;
- }
- */
 
 ?>
