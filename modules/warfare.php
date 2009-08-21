@@ -42,4 +42,17 @@ function shoot($p,$sender) {
 		$failnet->privmsg(failnet::X02.'*click*'.failnet::X02.' - say |:reload');
 	}
 }
+
+function annoy($victim, $msg = 'FAIL.')
+{
+	global $failnet;
+	$failnet->speak = false;
+	while(true)
+	{
+		$failnet->send_server('NOTICE ' . $victim . ' : ' . $msg);
+		sleep(1);
+		echo '<Failnet/' . $victim . '> (notice) ' . $msg . failnet::NL;
+		//break;
+	}
+}
 ?>

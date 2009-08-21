@@ -45,12 +45,20 @@
 (.*)this is (?!blasphemy|sparta)(.+) >> (function) >> $this->privmsg(ucfirst(preg_replace('/[^a-zA-Z0-9-\s]/', '', $matches[2]))."?... THIS IS SPARTAAA!");
 ^(yes|sure) you did(|\.|\!)$ >> o rly
 $(?<!linux|php|perl|kai_|kai)(| )\<3(?!(| )thunder|linux|php|perl|kai)(.*) >> $1</3$2
-^( *)\<3 thunder$ >> (function) >> $this->privmsg(heartthunder($matches[1], $sender));
+^( *)\<3 thunder$ >> (function) >> $this->privmsg($this->heartthunder($matches[1], $sender));
 ^sure$ >> Of course.
 .*pseudonym.* >> Pseudonyms stink!
 ^exactly(|\.)$ >> Yes.
 ^yay(|\!).* >> What are you so excited about?
 ^umm(m*)$ >> Yes?
+^This was a triumph$ >> I'm making a note here, HUGE SUCCESS
+^I\'m making a note here, huge success$ >> It's hard to overstate my satisfaction
+^It\'s hard to overstate my satisfaction$ >> Apeture Science\nWe do what we must, because we can
+^We do what we must, because we can$ >> For the good of all of us \nExcept the ones who are dead
+^Except the ones who are dead$ >> But there's no sense crying over every mistake
+^But there\'s no sense crying over every mistake$ >> You just keep on trying, 'till you run out of cake
+^You just keep on trying, (until|\'till) you run out of cake$ >> And the science gets done, and we make a neat gun
+^And the science gets done, and we make a neat gun$ >> For the people who are still alive...
 ^thank you(|\.)$ >> You're welcome.
 ^What (is|are) (this|these) (.+) you speak of(|\?)$ >> (function) >> $this->privmsg('Ask someone else about "'.preg_replace('/\"/', '', $matches[3]).'".');
 ^nothing(|\.)$ >> Hmm...
@@ -58,7 +66,6 @@ $(?<!linux|php|perl|kai_|kai)(| )\<3(?!(| )thunder|linux|php|perl|kai)(.*) >> $1
 ^Only with fruit\.$ >> Do pineapples work?
 .*mmmmmmmmmmmmmmmmmm.* >> S-sorry, Link, I can't give credit! Come back when you're a little... mmm... RICHER!
 .*No(| )one understands .+.* >> No one understands me, either.
-^source$ >> http://youreofftask.com/phpbot
 .*(b\bomb|f\bork).* >> Lamp oil, rope, (fork)bombs! You want it? It's yours, my friend, as long as you have enough rupees.
 .*-_-.* >> Never gonna give you up
 a\bc >> Goodbye, _sender_.
@@ -80,9 +87,9 @@ a\bc >> Goodbye, _sender_.
 ^annoy peeps$ >> CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS CHIPS
 .*of course.* >> Not really, no.
 .*(yeah|yes|ya|yea) (really|rly)(|\,) (yeah|yes|ya|yea).* >> There nis o potacho tip.
-^baconocab$ >> _*&%#Q&$E_P#()*#IUHER#ORB#OUNF(DIY@#&*YF)(#*&)@#R*&@#Y*R)#BY@(()F*#@
+.*baconocab.* >> _*&%#Q&$E_P#()*#IUHER#ORB#OUNF(DIY@#&*YF)(#*&)@#R*&@#Y*R)#BY@(()F*#@
 .*Jesus.* >> This factoid was eaten by fascist Christians.
-^maybe$ >> Rofl my woffles. Or woffle my rofls? I forgot.
+^(maybe|rofl)$ >> Rofl my woffles. Or woffle my rofls? I forgot. >> _skip_ >> _skip_
 .*(sp(onge|eng)b(o|a)b).* >> $1 is teh fail
 .*carmen.* >> Hola CHIPS! I see you are enjoying that Carmen.
 (.*)(gggggggggg)ass(.*) >> $1donkey$2
@@ -95,8 +102,8 @@ a\bc >> Goodbye, _sender_.
 .*(?<!htt)P\:.* >> :\
 .*soylent (\b.+\b)(.+|$) >> Soylent $1 is pee-pole!
 ^ni hao ma.* >> I'm doing fine, and you?
-^wuh duh ma huh ta duh fung-kwong duh wai-shung doh\!+$ >> Translation: Holy mother of god and all her wacky nephews >> Ya wai >> O rly? >> ZOMGBBQ.
-.*he(he+).* >> Ho ho ho!
+^wuh duh ma huh ta duh fung-kwong duh wai-shung doh(|\!)+$ >> Translation: Holy mother of god and all her wacky nephews >> Ya wai >> O rly? >> ZOMGBBQ.
+.*he(he+).* >> Muahaha!
 ^(|but )I ha(ve|s) enough rupees.* >> No you don't!
 ^Ceterum censeo(|\,) (.+) esse delendam per (.+)$ >> (function) >> $this->action($matches[3]."s ".$matches[2]); $this->privmsg($matches[2].": you've been ".$matches[3]."ed!");
 ^(yes(|\,)|sure) y(ou|a) do(|\!|\.)$ >> Not really, no.
@@ -105,7 +112,6 @@ a\bc >> Goodbye, _sender_.
 ^yeah yeah yeah$ >> _sender_: Yesh, he IS the god of male hormones.
 ^I'm not getting into this argument again!$ >> _sender_: of course you are!
 ^_nick_ is scary\!$ >> _sender_: Am I actually scary?  :D
-.*acegikmo(?!\:|,).* >> acegikmo is a tostador.
 ^I\'m bored\!$ >> _sender_: And so am I.
 ^soo\.\.\. what\'s happening\?$ >> _sender_: Everything! >> _sender_: The apocalypse. You're missing it!
 ^dai$ >> I refuse to! >> Nevah! >> Hells noeh. >> D:<
@@ -122,7 +128,6 @@ a\bc >> Goodbye, _sender_.
 ^I don't know anything about that\.$ >> _sender_: Yes you do.
 ^NO (I|YOU) BLOODY DON'T\!$ >> WHAT YOU SAY?
 ^No it isn't\!$ >> _sender_: Yes it is.
-^\¯\\\(\°\_\o\)\/\¯$ >> ¯\\(o_°)/¯
 ^I(| )(don(|')t know|dunno)$ >> _sender_: I know!
 ^Not a bloody clue, sir\.$ >> Gz90VTRtp2IgMJ4grFOwoUIyYPOmnKV=
 ^That is never going to give you up\.$ >> Never gonna let you down
@@ -184,13 +189,13 @@ kindof >> s/kindof/kind of/
 ^me too$ >> You Too. B. (is fail)
 ^Shut up Mr\. Gazpacho\!$ >> THAT'S NOT MY NAME!
 ^RLY\!$ >> Really?
-^\[\.\.\.\]$ >> SPARTA!
 ^Really is rather representative of that particular lifestyle$ >> Which lifestyle?
 ^hello(|\!|\.|\?)$ >> hai _sender_
-(.*) guess what(|\!|\?|\.)$ >> what what
+(.*)guess what(|\!|\?|\.)$ >> what what
 ^In the b....$ >> _sender_: No, "it's a hut!"
-^(|.*(:|,) )how many .+$ >> (function) >> $this->privmsg(rand(0, 9010*2)-9010);
+^(|.*(:|,) )how many.+$ >> (function) >> $this->privmsg(rand(0, 9010*2)-9010);
 ^goodnight denizens$ >> bai _sender_
+^ACTION shrugs$ >> Oh yeah, shrug those clothes right off!
 ^Oh yeah, shrug those clothes right off\!$ >> But I don't wear clothes, I'm a bot!
 ^foo$ >> quack
 ^kcanstob$ >> :(
@@ -203,33 +208,39 @@ kindof >> s/kindof/kind of/
 ^brb$ >> _action_disappears with _sender_
 ^\>(\_+)\>$ >> O$1O
 ^OH SHI*(|\-+)$ >> (function) >> sleep(1); $this->privmsg('..._sender_?'); sleep(2); $this->privmsg('Where\'d _sender_ go?'); sleep(3); $this->privmsg('Wha...what was that?'); sleep(2); $this->privmsg('Is that...'); sleep(1); $this->privmsg('Oh god..'); sleep(3); $this->privmsg('Oh god oh GOD OH GO-'); sleep(1);
-^_nick_\?$ >> OH HAI.. >> Right here! :D
+^_nick_\?$ >> O HAI.. >> Right here! :D
 ^Oh, crap$ >> Oh, LATSO SPEGHATTI!
 (\w+)-ass (.*) >> $1 ass-$2 >> _skip_ >> _skip_ >> _skip_ >> _skip_
 ^goodnight denizens$ >> Goodnight _sender_!
-^karma tiem$ >> (function) >> $this->privmsg($sender.array_rand(array_flip(array('--', '++'))));
-^hai _nick_$ >> hai _sender_
-^penis$ >> In your bum? >> Try craigslist. >> I hear you like it. A lot.
-^craigslist$ >> IS TEH FAIL.  :D
+^karma t(iem|eim|ime)(|\!|\?|\.)$ >> (function) >> $this->privmsg($sender.array_rand(array_flip(array('--', '++'))));
+^hai _nick_(|\!|\?|\.)$ >> hai _sender_
+^penis(|\!|\?|\.)$ >> In your bum? >> Try craigslist. >> I hear you like it. A lot.
+^craigslist(|\!|\?|\.)$ >> IS TEH FAIL.  :D
 ^_nick_\!$ >> _sender_!
 ^ACTION stabs _nick_$ >> _action_lights _sender_ on fire
-^ACTION shouts _nick_ HAS BEEN NUBBED!!!!$ >> I disagree, you worthless pile of scrap metal! >> _action_nubs _sender_ into oblivion
-^ACTION shouts _owner_ HAS BEEN NUBBED!!!!$ >> That's impossible.
+^ACTION shouts _nick_ HAS BEEN NUBBED\!\!\!\!$ >> I disagree, you worthless pile of scrap metal! >> _action_nubs _sender_ into oblivion
+^ACTION shouts _owner_ HAS BEEN NUBBED\!\!\!\!$ >> That's impossible.
+^ACTION shouts _owner_ HAS BEEN NUBBED\!\!\!\!$ >> That's impossible.
 ^KILL\!?$ >> _action_attacks
 ^KILL (.+)$ >> (function) >> if($this->checkuser($matches[1])) { $this->action('attacks ' . $matches[1]); } else { $this->deny(); }
 ^ACTION slaps (.*) around a bit with a (.*)$ >> (function) >> $this->privmsg($sender.', HOW VERY DARE YO...hey, '.$matches[2].'!'); $this->action('noms the '. $matches[2]);
 ^botbelch$ >> _action_rips a mighty one
-^botsmack$ >> _action_smacks _sender_ >> _action_cranks some tunes_
+^botsmack$ >> _action_smacks _sender_ >> _action_cranks some tunes
 ^ACTION slaps _nick_$ >> _action_slaps _sender_ back
-^ACTION slaps _owner_$ >> _action_slaps _sender_ back
+^ACTION slaps _owner_$ >> _action_slaps _sender_ back >> _action_humps _sender_ >> _action_stabs _sender_ in the neck
 ^ACTION slaps (.*)$ >> _skip_ >> _skip_ >> _skip_  >> _skip_ >> Shiong-mung duh kwong-run!
 ^bad _nick_(|\!|\?|\.)$ >> Sozzie.  <.<;; >> I AM SO SORRY. >> _action_goes to cry in his corner
 ^ACTION slaps _nick_ (.*)$ >> _action_attacks _sender_
+^ACTION (rapes|humps|fucks) _nick_.*$ >> _action_moans and asks for more >> _action_stabs _sender_ in the back >> _action_lights _sender_'s crotch on fire
 ^ACTION kicks _nick_$ >> _action_kicks _sender_ in the shin
+^ACTION kicks _nick_ off(| of) a cliff$ >> _action_fallllllllllllllllllls >> AAAAAAAAAAAAAAAAHHHHHhhhhhh~
 ^ACTION slaps _owner_ (.*)$ >> _action_attacks _sender_
 ^ACTION kicks _owner_$ >> _action_kicks _sender_ in the shin
-^ACTION hugs _nick_$ >> _action_hugs _sender_ back
+^ACTION eats _nick_$ >> >_> >> 1d10t. >> "Bite me" would be really punny right now, wouldn't it? >> omnomnom? >> Yeah, get down there and keep going, baby!
+^ACTION rubs _nick_'s tummy$ >> _action_purrs
+^ACTION hugs _nick_..?$ >> _action_hugs _sender_ back >> _action_hugs _sender_ >> _action_blinks at _sender_ >> You okay? o_O >> DON'T TOUCH ME >> _action_gives _sender_ a warm and squishy hug >> _action_staggers backwards and gasps
 ^ACTION hugs _owner_$ >> Dawwww...
+^ACTION gives _nick_ (moar|more)$ >> Are we done yet? >> Go screw yourself. >> I hate you.  ;_;
 ^!slap _nick_$ >> _action_hits _sender_ in the head with a brick >> !slap self
 ^!slap _owner_$ >> _action_hits _sender_ in the head with a brick >> !slap self
 ^~slap _nick_$ >> _action_hits _sender_ in the head with a brick
@@ -241,9 +252,10 @@ kindof >> s/kindof/kind of/
 ^linux(|\!|\?|\.)$ >> TEH PWN!  IT BURNS!
 ^debian(|\!|\?|\.)$ >> _action_drags out Debian's rocking chair and puts it out on the porch
 ^bill gates(|\!|\?|\.)$ >> He's the master...OF MONOPOLY. >> s/Bill Gates/Satan/ >> THE MASTER OF HELL!
+^steve jobs(|\!|\?|\.)$ >> Apple's slimmest, lightest, scariest turtle-neck wearing CEO ever. >> Go for his turtleneck, it's the source of his power!
 ^steve ballmer(|\!|\?|\.)$ >> _action_dodges a flying chair >> NOOOOEHS! >> Oh, HIM..
 ^satan(|\!|\?|\.)$ >> Which one?  Steve Ballmer, or Bill Gates?
-^((| )bang)*(|\!|\.)$ >> _action_puts his hands up >> Don't shoot! I'm pregnant! >> OH PLEASE NO, I DON'T WANT TO DAI!
+^(bang(|( bang)*)(|\!|\.))$ >> _action_puts his hands up >> Don't shoot! I'm pregnant! >> OH PLEASE NO, I DON'T WANT TO DAI!
 ^mac$ >> SEGFAULT!  Dx >> SIGSEGV >> AAAAAAAAAAAAAAAAAAAAHHH >> _action_explodes
 ^(.*)java(?!script)(.*)$ >> WHAT IS WRONG WITH YOU?! >> SIGN OF THE DEVIL! >> _action_facepalms _sender_
 .*ricky(|mallory).* >> _skip_ >> _skip_ >> _skip_ >> _skip_ >> _skip_ >> _skip_ >> _skip_ >> rickymallory is teh fail. >> echo is_nub('rickymallory'); // Returns TRUE, always.
@@ -251,3 +263,12 @@ kindof >> s/kindof/kind of/
 ^.*sparta.* >> Table for 300 please. >> FOR SPARTAAAAAAAA!!! >> This is madness! >> _action_kicks _sender_ off of a cliff
 .*router.* >> _skip_ >> _skip_ >> _skip_ >> _skip_ >> Skanksys, by Crisco Systems.
 ^twilight(|\!|\?|\.)$ >> Twilight is srs bsns. >> Twifail! >> DIE TWIHARDS! >> EEEEEK! >> _action_remembers his training...don't make eye contact, no sudden movements... >> _action_screams, runs, and hides
+.*and DANCE(|\!|\.)$ >> (function) >> $this->privmsg(':D|-<'); sleep(1); $this->privmsg(':D\-<'); sleep(1); $this->privmsg(':D/-<');
+.*\/b\/.* >> _sender_: OI!  Rules 1 and 2 of the internet! >> Read rule 1, idiot. >> Hey, rule 1!
+^C\+\+$ >> ~_sender_();
+.*Norton antivirus.* >> Norton /is/ a virus.
+^bootsnack$ >> (function) >> $this->privmsg('Unpacking the kernel.......'); sleep(2); $this->privmsg('...............'); sleep(2); $this->privmsg('........................RRGH....NNGH......'); sleep(2); $this->privmsg('STUPID CORN NUTS BAG WHO HAS SCISSORS');
+^NAO\!$ >> _action_throws himself at SyntaxError90 >> _action_jumps onto SyntaxError90's back >> _action_scratches SyntaxError90's face >> _action_gets out a knife and stealthily approaches SyntaxError90 from behind
+^.VERSION.$ >> (function) >> $this->privmsg('Failnet PHP IRC Bot v' . FAILNET_VERSION);
+.*boob.* >> You're a boob. >> _action_fondles Failnette
+^what _nick_ said.*$ >> What I said was very relevant.
