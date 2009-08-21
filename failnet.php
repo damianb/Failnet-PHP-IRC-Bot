@@ -7,7 +7,7 @@
  *  Failnet -- PHP-based IRC Bot
  *-------------------------------------------------------------------
  *	Script info:
- * Version:		1.0.1
+ * Version:		1.0.2
  * SVN ID:		$Id$
  * Copyright:	(c) 2009 - Obsidian
  * License:		http://opensource.org/licenses/gpl-2.0.php  |  GNU Public License v2
@@ -46,7 +46,8 @@
  * @ignore
  */
 define('IN_FAILNET', true);
-define('FAILNET_VERSION', '1.0.1'); 
+define('FAILNET_VERSION', '1.0.2'); 
+@set_time_limit(0);
 
 $failnet = new failnet();
 
@@ -62,8 +63,11 @@ echo 'Failnet is starting up. Go get yourself a coffee.' . failnet::NL;
 // Set error handler
 echo '- Loading error handler' . failnet::NL; @set_error_handler('fail_handler');
 
+// Set default timezone
+echo '- Setting default timezone' . failnet::NL; date_default_timezone_set(@date_default_timezone_get());
+
 // Loading DBs, initializing some vars
-$actions = array_flip(file('data/actions'));
+$actions = array_flip(file('./data/actions'));
 
 // Load dictionary file - This fails on Windows systems.
 echo '- Loading dictionary (if file is present on OS)' . failnet::NL; $dict = (@file_exists('/etc/dictionaries-common/words')) ? file('/etc/dictionaries-common/words') : array();
@@ -71,16 +75,20 @@ echo '- Loading dictionary (if file is present on OS)' . failnet::NL; $dict = (@
 // Load user DB
 echo '- Loading user database' . failnet::NL; $failnet->loaduserdb();
 
+// Load stopwords
+echo '- Loading stopwords list' . failnet::NL; $failnet->loadstopwords();
+
 // Adding the core to the modules list and loading help file
 $failnet->modules[] = 'core';
-$help['core'] = 'Good luck.'; //file_get_contents('data/corehelp'); // This file was just...missing.  O_o
+$help['core'] = 'Good luck.'; //file_get_contents('./data/corehelp'); // This file was just...missing.  O_o
 
 // Load modules
 $load = array(
-	'simple_html_dom',
+//	'simple_html_dom',
 	'warfare',
-	'slashdot',
-	'xkcd',
+//	'slashdot',
+//	'xkcd',
+	'firefly',
 	'reload',
 	'rules',
 /*
@@ -96,12 +104,12 @@ foreach($load as $item)
 }
 
 // This is a hack to allow us to restart Failnet if we're running the script through a batch file.
-echo '- Removing termination indicator file' . failnet::NL; if(file_exists('data/restart')) unlink('data/restart');
+echo '- Removing termination indicator file' . failnet::NL; if(file_exists('./data/restart')) unlink('./data/restart');
 
 // Load in the configuration data file
 echo '- Loading configuration file for specified IRC server' . failnet::NL; $failnet->load($argv[1]);
 
-echo '- Loading ignored users list' . failnet::NL; $failnet->ignore = explode(', ', file_get_contents('data/ignore_users'));
+echo '- Loading ignored users list' . failnet::NL; $failnet->ignore = explode(', ', file_get_contents('./data/ignore_users'));
 
 // In case of restart/reload, to prevent 'Nick already in use' (which asplodes everything)
 echo 'Preparing to connect...' . failnet::NL; sleep(1);
@@ -137,14 +145,21 @@ class failnet
 	// DO NOT SET.
 	public $original = '';
 	public $chan = '';
+	public $time = 0;
 
 	// Currently loaded/joined channels, occupants for each channel, etc.
 	public $chans = array();
+	public $quiet = array();
 	public $names = array();
 	public $log = array();
+	
+	// Stopword stuffs. :D
+	public $stop = array();
+	public $stopwords = array();
+	public $stopword = '';
 
 	// Currently ignored users.
-	public $ignore = array();  // explode(', ', file_get_contents('data/ignore_users'));
+	public $ignore = array();  // explode(', ', file_get_contents('./data/ignore_users'));
 
 	// Authed users.
 	public $users = array();
@@ -165,7 +180,7 @@ class failnet
 	 * Methods for Failnet
 	 */
 
-	public function __construct() { }
+	public function __construct() { $this->time = time(); }
 	
 	public function run()
 	{
@@ -178,7 +193,7 @@ class failnet
 				
 			if (!preg_match('/PRIVMSG|\|auth|\|adduser|\|ident/i', $srvmsg))  // Don't display passwords and stuff. ;)
 			{
-				if($this->debug) echo $this->cycle . '       ' . $srvmsg . self::NL;
+				if($this->debug) echo $srvmsg . self::NL;
 			}
 			
 			
@@ -187,13 +202,14 @@ class failnet
 				// Tell the server about us
 				if ($this->cycle == 0)
 				{
-					if (ereg('(Throttled: Reconnecting too fast)', $srvmsg))
+					if (preg_match('(Throttled\: Reconnecting too fast)', $srvmsg))
 					{
 						echo 'Couldn\'t connect, let\'s try again.' . self::NL;
 						$failnet->terminate(true);
 					}
 					else
 					{
+						$this->log('--- Connected to ' . $this->server . ' on port ' . $this->port . ' ---', true);
 						echo 'Connected to ' . $this->server . ' on port ' . $this->port . self::NL;
 						$this->send_server('USER ' . $this->user . ' null null :' . $this->name . self::NL . 'NICK ' . $this->nick);
 					}
@@ -210,7 +226,7 @@ class failnet
 				}
 	
 				// Join channels after MOTD.
-				if (ereg('End of /MOTD command', $srvmsg))
+				if (strstr($srvmsg, 'End of /MOTD command') !== false)
 				{
 					foreach ($this->chans as $chan_)
 					{
@@ -229,15 +245,16 @@ class failnet
 			*/
 	
 			// Parsing...
-			$str = split(':', $srvmsg, 3);
-			$str[1] = split(' ', $str[1]);
-			$str[1][0] = split('!', $str[1][0]);
+			$str = explode(':', $srvmsg, 3);
+			$str[1] = explode(' ', $str[1]);
+			$str[1][0] = explode('!', $str[1][0]);
 				
 			// Play some ping pong with the server
 			if (substr($srvmsg, 0, 6)=='PING :')
 			{
 				$this->send_server('PONG :' . substr($srvmsg, 6));
 				$servermsg = 'PING';
+				continue;
 			}
 			else
 			{
@@ -257,8 +274,12 @@ class failnet
 					$chans_ = array_flip($this->chans);
 					unset($this->chans[$chans_[$str[1][2]]]);
 				}
-				if (file_get_contents('data/eternalrampage')=='yesh') rampage(0); // Because I feel evil.
-				if (!empty($this->pass)) $this->privmsg('IDENTIFY ' . $this->pass, 'NickServ'); unset($this->pass);
+				if (file_get_contents('./data/eternalrampage')=='yesh') rampage(0); // Because I feel evil.
+				if (!empty($this->pass) && !isset($identified))
+				{
+					$this->privmsg('IDENTIFY ' . $this->pass, 'NickServ');
+					$identified = true;
+				}
 				if (!$introduced)
 				{
 					usleep(500);
@@ -291,44 +312,48 @@ class failnet
 					{
 						$forme = false;
 					}
-					$command = (preg_match('/^\|/', $str[2])) ? true : false;
+					$command = (substr($str[2], 0, 1) == '|') ? true : false;
 					if (!preg_match('/\|adduser|\|auth|\|ident/i', $str[2]))
 					{
 						echo '<' . $str[1][0][0] . '/' . $this->chan . '> ' . $str[2] . self::NL; // Removes mask, etc.
 						$this->add_log($str[2], $str[1][0][0], $this->chan);
 					}
-					if(!in_array($str[1][0][0], $this->ignore)) // Ignore select users. :D
+					if(!in_array($str[1][0][0], $this->ignore) && ((!in_array($this->chan, $this->quiet)) || ($forme || $command))) // Ignore select users. :D
 					{
 						if (substr(strtolower($str[2]),0,5)=='|say ' && $this->speak)
 						{
 							$whattosay = rtrim(substr($str[2],5));
 							// We don't want to be kicked.
-							$this->privmsg( ($whattosay == 'opme') ? 'I\'m sorry, you\'re not permitted to use me to test kicking.' : $whattosay);
+							$this->privmsg(($whattosay == 'opme') ? 'I\'m sorry, you\'re not permitted to use me to test kicking.' : $whattosay);
 						}
 						else
 						{
-							if ($this->speak && $forme && preg_match('/^shut up$/i', $str[2]))
+							if ($this->speak && $forme && strtolower($str[2]) == 'shut up')
 							{
 								$this->choose('Okay, I\'ll shut up for now.', 'Oh, shut up? I can shut up! I always shut up when anybody asks me to shut up, I\'m very shutty-uppy..');
 								$this->factoids(0, 0);
 							}
 							if ($this->speak) $this->checkfact($str[2], $forme, $command, $str[1][0][0]);
-							if (!$this->speak && $forme && preg_match('/^come back$/i', $str[2]))
+							if (!$this->speak && $forme && strtolower($str[2]) =='come back')
 							{
 								$this->privmsg('Hooray!');
 								$this->factoids(1, 0);
 							}
 						}
+						if(!empty($this->stopword) && in_array($this->chan, $this->stop) && preg_match('#' . preg_quote($this->stopword, '#') . '#i', $str[2]))
+						{
+							$this->kick(false, $str[1][0][0], 'JACKPOT!', $this->chan);
+							$this->new_stopword($this->stopword);
+						}
 					}
-					else
+					elseif(!in_array($str[1][0][0], $this->ignore) && !in_array($this->chan, $this->quiet))
 					{
 						// 30% chance of telling the ignored user that they're being ignored, if it was a direct factoid.
 						if ($forme && rand(0, 9) > 7) $this->privmsg('I\'m ignoring you.', $str[1][0][0]);
 					}
 				}
 			}
-			// Stuff to do before the next cycle
-			$this->cycle++;
+			$this->cycle = 1;
 			unset($servermsg, $srvmsg);
 			$forme = false;
 		}
@@ -336,14 +361,14 @@ class failnet
 	
 	public function load($srv)
 	{
-		if(!file_exists('data/config_' . $srv) || !is_readable('data/config_' . $srv))
+		if(!file_exists('./data/config_' . $srv) || !is_readable('./data/config_' . $srv))
 		{
 			$error = '[ERROR] Failed loading configuration file for server "' . $srv . '"';
 			log_error($error);
 			echo($error) . self::NL;
-			$failnet->terminate(false);
+			$this->terminate(false);
 		}
-		$config = file('data/config_' . $srv);
+		$config = file('./data/config_' . $srv, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 		foreach($config as &$item)
 		{
 			$item = explode('::', rtrim($item));
@@ -351,7 +376,7 @@ class failnet
 			if(property_exists(__CLASS__, $key)) $this->$key = $item[1];
 		}
 		
-		echo '- Loading channel autojoin list' . self::NL;	$this->chans = explode(' ', file_get_contents('data/chans_' . $srv));
+		echo '- Loading channel autojoin list' . self::NL;	$this->chans = explode(' ', file_get_contents('./data/chans_' . $srv));
 	}
 	
 	/**
@@ -372,10 +397,11 @@ class failnet
 		if (!empty($msg))
 		{
 			$where = ($spec) ? $spec : $this->chan;
-			$msg = str_replace('\n', self::NL, $msg);
-			if (ereg(self::NL, $msg))
+			$msg = str_replace("\r", '', $msg);
+			$msg = str_replace(self::NL, '\n', $msg);
+			if (strstr($msg, '\n') !== false)
 			{
-				$msgs = split('/\r?[\r\n]/', $msg);
+				$msgs = explode('\n', $msg);
 				foreach ($msgs as $msg2)
 				{
 					$this->add_log($msg2, $this->nick, $where);
@@ -429,6 +455,25 @@ class failnet
 			$this->chans[] = $newchan;
 			array_unique($this->chans);
 			$this->send_server('JOIN ' . $newchan);
+			// Write to our log.  ;)
+			$this->log('--- Joining channel "' . $newchan . '" ---');
+			if(!$this->debug) echo '-!- Joining "' . $newchan . '"' . self::NL;
+			$this->privmsg('Let there be faiiiillll!', $newchan);
+		}
+		else
+		{
+			$this->deny();
+		}
+	}
+	
+	// Jump into an IRC channel.
+	public function join_keyed($sender, $newchan, $key = '')
+	{
+		if ($this->authlevel($sender) > 4)
+		{
+			$this->chans[] = $newchan;
+			array_unique($this->chans);
+			$this->send_server('JOIN ' . $newchan . ' :' . $key);
 			// Write to our log.  ;)
 			$this->log('--- Joining channel "' . $newchan . '" ---');
 			if(!$this->debug) echo '-!- Joining "' . $newchan . '"' . self::NL;
@@ -556,7 +601,7 @@ class failnet
 		if($restart)
 		{
 			// Just a hack to get it to restart through batch, and not terminate.
-			file_put_contents('data/restart', 'yesh');
+			file_put_contents('./data/restart', 'yesh');
 			// Dump the log cache to the file.
 			$this->log('--- Restarting Failnet ---', true);
 			if(!$this->debug) echo '-!- Restarting Failnet' . self::NL;
@@ -565,7 +610,7 @@ class failnet
 		else
 		{
 			// Just a hack to get it to truly terminate through batch, and not restart.
-			if(file_exists('data/restart')) unlink('data/restart');
+			if(file_exists('./data/restart')) unlink('./data/restart');
 			// Dump the log cache to the file.
 			$this->log('--- Terminating Failnet ---', true);
 			if(!$this->debug) echo '-!- Terminating Failnet' . self::NL;
@@ -610,15 +655,15 @@ class failnet
 	{
 		if ($forme)
 		{
-			$facts = array_merge(file('data/factoids_specifically_for_me'), file('data/factoids'));
+			$facts = array_merge(file('./data/factoids_specifically_for_me', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES), file('./data/factoids', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
 		}
 		elseif ($command)
 		{
-			$facts = array_merge(file('data/commands'), file('data/factoids'));
+			$facts = array_merge(file('./data/commands', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES), file('./data/factoids', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
 		}
 		else
 		{
-			$facts = file('data/factoids');
+			$facts = file('./data/factoids', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 		}
 
 		$search = array(
@@ -662,7 +707,7 @@ class failnet
 					if (sizeof($facts[$i])>3)
 					{
 						$usefact = $facts[$i][rand(2, sizeof($facts[$i]) - 1)];
-						if (!ereg('_skip_', $usefact))
+						if (strpos($usefact, '_skip_') !== false)
 						{
 							eval($usefact);
 							$done++;
@@ -682,34 +727,28 @@ class failnet
 					if (sizeof($facts[$i]) > 2)
 					{
 						$usefact = $facts[$i][rand(1, sizeof($facts[$i]) - 1)];
-						if (preg_match('/^\_action\_/', $usefact))
+						if (strpos($usefact, '_action_') === 0)
 						{
 							$this->action(preg_replace('/' . $facts[$i][0] . '/i', preg_replace('/^\_action\_/', '', $usefact), $tocheck));
 							$done++;
 						}
-						else
+						elseif (strpos($usefact, '_skip_') === false)
 						{
-							if (!ereg('_skip_', $usefact))
-							{
-								$this->privmsg(preg_replace('/' . $facts[$i][0] . '/i', $usefact, $tocheck));
-								$done++;
-							}
+							$this->privmsg(preg_replace('/' . $facts[$i][0] . '/i', $usefact, $tocheck));
+							$done++;
 						}
 					}
 					else
 					{
-						if (preg_match('/^\_action\_/', $facts[$i][1]))
+						if (strpos($facts[$i][1], '_action_') === 0)
 						{
 							$this->action(preg_replace('/' . $facts[$i][0] . '/i', preg_replace('/^\_action\_/', '', $facts[$i][1]), $tocheck));
 							$done++;
 						}
-						else
+						elseif (strpos($facts[$i][1], '_skip_') === false)
 						{
-							if (!ereg('_skip_', $facts[$i][1]))
-							{
-								$this->privmsg(preg_replace('/' . $facts[$i][0] . '/i', $facts[$i][1], $tocheck));
-								$done++;
-							}
+							$this->privmsg(preg_replace('/' . $facts[$i][0] . '/i', $facts[$i][1], $tocheck));
+							$done++;
 						}
 					}
 				}
@@ -719,6 +758,7 @@ class failnet
 		{
 			//privmsg(markov());
 		}
+		unset($facts);
 	}
 
 	// Enable/disable factoids.
@@ -733,8 +773,8 @@ class failnet
 	{
 		if ($this->authlevel($sender)>6)
 		{
-			file_put_contents('data/backups/factoids_' . time(), file_get_contents('data/factoids'));
-			$lines = file('data/factoids');
+			file_put_contents('./data/backups/factoids_' . time(), file_get_contents('./data/factoids'));
+			$lines = file('./data/factoids', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 			foreach ($lines as &$line)
 			{
 				$line = explode(' >> ', $line);
@@ -747,7 +787,7 @@ class failnet
 					$line = implode(' >> ', $line);
 				}
 			}
-			file_put_contents('data/factoids', implode('', $lines));
+			file_put_contents('./data/factoids', implode('', $lines));
 			$this->privmsg('Okay ' . $sender . ', I have deleted the factoid ' . $fact . ' from the database.');
 		}
 		else
@@ -769,7 +809,7 @@ class failnet
 			{
 				$user_row[3] = 1;
 				$this->privmsg('Instant authentication successful.');
-				file_put_contents('data/instantauth', 'nope');
+				file_put_contents('./data/instantauth', 'nope');
 			}
 		}
 	}
@@ -800,7 +840,7 @@ class failnet
 	// Load the users DB file initially. :D
 	public function loaduserdb()
 	{
-		$this->users = file('data/users');
+		$this->users = file('./data/users', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 		foreach ($this->users as &$user)
 		{
 			$user = explode('::', rtrim($user));
@@ -808,10 +848,37 @@ class failnet
 		// Just a hack to let us do things ourselves.
 		$this->users[] = array($this->original, '100', sha1($this->pass), true);
 	}
+	
+	// Load the stopword DB.  >:D
+	public function loadstopwords()
+	{
+		$this->stopwords = file('./data/stopwords', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		$this->new_stopword('');
+	}
+	
+	// Set a new stopword.
+	public function new_stopword($last = '')
+	{
+		if(!empty($this->stopwords))
+		{
+			do
+			{
+				$stopword = $this->stopwords[array_rand($this->stopwords)];
+			}
+			while($stopword == $last);
+			$this->stopword = $stopword;
+		}
+		else
+		{
+			$this->stopword = '';
+		}
+	}
 
 	// Get a user's auth level.
 	public function authlevel($person)
 	{
+		if($person === false)
+			return 100;
 		foreach ($this->users as &$user)
 		{
 			if ($user[0] == $person) return (!empty($user[3])) ? $user[1] : false;
@@ -825,7 +892,7 @@ class failnet
 		{
 			if ($user[0] == $nick) return;
 		}
-		file_put_contents('data/users', self::NL . $nick . '::0::' . sha1($pw), FILE_APPEND);
+		file_put_contents('./data/users', self::NL . $nick . '::0::' . sha1($pw), FILE_APPEND);
 	}
 	
 	// Ignore a user.
@@ -836,7 +903,7 @@ class failnet
 			if(!in_array($victim, $this->ignore))
 			{
 				$this->ignore[] = $victim; 
-				file_put_contents('data/ignore_users', implode(', ', $this->ignore));
+				file_put_contents('./data/ignore_users', implode(', ', $this->ignore));
 				$this->privmsg('User "' . $victim . '" is now ignored.'); 
 			}
 			else
@@ -859,7 +926,7 @@ class failnet
 			{
 				if($user == $victim) unset($this->ignore[$id]);
 			}
-			file_put_contents('data/ignore_users', implode(', ', $this->ignore));
+			file_put_contents('./data/ignore_users', implode(', ', $this->ignore));
 			$this->privmsg('User "' . $victim . '" is no longer ignored.');
 		}
 		else
@@ -873,7 +940,7 @@ class failnet
 	{
 		if ($this->authlevel($sender) > 9)
 		{
-			$this->ignore = explode(', ', file_get_contents('data/ignore_users')); 
+			$this->ignore = explode(', ', file_get_contents('./data/ignore_users')); 
 			$this->privmsg('Reloaded ignore list.');
 		}
 		else
@@ -979,9 +1046,9 @@ class failnet
 
 	// Write an event to the log.
 	public function add_log($log, $sender, $where = false)
-	{x
-		if(preg_match('/^IDENTIFY (.*)/i', $log)) $log = 'IDENTIFY ***removed***';
-		$log = (preg_match('/' . self::NL . '(| )$/i', $log)) ? substr($log, 0, strlen($log) - 1) : $log;
+	{
+		if(substr($log, 0, 9) == 'IDENTIFY ') $log = 'IDENTIFY ***removed***';
+		$log = (strrpos($log, self::NL . self::NL) !== false) ? substr($log, 0, strlen($log) - 1) : $log;
 		$this->log(@date('D m/d/Y - h:i:s A') . ' <' . $sender . (($where) ? '/' . $where : false) . '> ' . preg_replace('/^' . self::X01 . 'ACTION (.+)' . self::X01 . '$/is', '*'. $sender . ' $1' . '*', $log));
 	}
 	
@@ -1071,7 +1138,7 @@ function rampage($exit = 0, $eternal = 0)
 	global $failnet;
 	if ($eternal)
 	{
-		file_put_contents('data/eternalrampage', 'yesh');
+		file_put_contents('./data/eternalrampage', 'yesh');
 	}
 	$failnet->factoids(0, 0);
 	$failnet->action('goes on a rampage');
@@ -1103,6 +1170,75 @@ function get_formatted_filesize($bytes)
 
 	return $bytes . ' B';
 }
+
+/**
+ * Converts a given integer/timestamp into days, minutes and seconds
+ *
+ * @param int $time The time/integer to calulate the values from
+ * @return string
+ */
+function timespan($time, $last_comma = false)
+{
+	$return = array();
+
+	$count = floor($time / 29030400);
+	if ($count > 0)
+	{
+		$return[] = $count . (($count == 1) ? ' year' : ' years');
+		$time %= 29030400;
+	}
+
+	$count = floor($time / 2419200);
+	if ($count > 0)
+	{
+		$return[] = $count . (($count == 1) ? ' month' : ' months');
+		$time %= 2419200;
+	}
+
+	$count = floor($time / 604800);
+	if ($count > 0)
+	{
+		$return[] = $count . (($count == 1) ? ' week' : ' weeks');
+		$time %= 604800;
+	}
+
+	$count = floor($time / 86400);
+	if ($count > 0)
+	{
+		$return[] = $count . (($count == 1) ? ' day' : ' days');
+		$time %= 86400;
+	}
+
+	$count = floor($time / 3600);
+	if ($count > 0)
+	{
+		$return[] = $count . (($count == 1) ? ' hour' : ' hours');
+		$time %= 3600;
+	}
+
+	$count = floor($time / 60);
+	if ($count > 0)
+	{
+		$return[] = $count . (($count == 1) ? ' minute' : ' minutes');
+		$time %= 60;
+	}
+
+	$uptime = (sizeof($return) ? implode(', ', $return) : '');
+
+	if(!$last_comma)
+	{
+		if ($time > 0 || count($return) <= 0)
+			$uptime .= (sizeof($return) ? ' and ' : '') . ($time > 0 ? $time : '0') . (($time == 1) ? ' second' : ' seconds');
+	}
+	else
+	{
+		if ($time > 0 || count($return) <= 0)
+			$uptime .= (sizeof($return) ? ((sizeof($return) > 1) ? ',' : '') . ' and ' : '') . ($time > 0 ? $time : '0') . (($time == 1) ? ' second' : ' seconds');
+	}
+
+	return $uptime;
+}
+
 
 // THE PAAAAIN! Results in death for Failnet due to excess flood.
 function silentdeath()

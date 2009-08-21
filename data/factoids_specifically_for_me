@@ -6,16 +6,23 @@ time >> (function) >> $this->privmsg(time());
 ^is .+\?$ >> If it's Saturday >> Ask when I have a deviled egg stuck in my throat >> You must first eradicate Christianity >> If my feet are clean >> Yes >> No >> Does Taylor approve? >> If you have seen 300 backwards over 9000 times in a row >> Ask jercos >> If a computer exactly 9 miles from you is 64 bit >> If you have eaten a power cord at the age of 3
 ^can .+$ >> Allah commands it! >> God doesn't exist, but you have his disapproval >> If it doesn't nom mah brain
 ^will .+$ >> On Saturday >> Sooner than you think >> Once chaos95 releases the allahdamn source code!!!@!!!1 >> The bagels will, yes... >> NO!!! >> Gas. Of Pin. >> PONGAS
-.*(|your )owner(|\?).* >> My owner is _owner_.  :D
+^(|who is |who is your |your )owner(|\?) >> My owner is _owner_.  :D
 ^do you l(ik|ov)e (?!your owner)(.+)(|\?)$ >> Yes >> No >> If $2 isn't a creationist >> As much as I like pai >> Um, not so much.
 ^do you l(ik|ov)e your owner\?$ >> Yes! <3
+^does your owner l(ik|ov)e you(|\?)$ >> I wish I knew... >> I'm never sure. >> What is this, 20 questions? >>  I don't know... ;_;
 ^nub (.*)$ >> (function) >> if($this->checkuser($matches[1])) { $this->action('looks over at '.$matches[1]); sleep(1); $this->action('slaps a "FAIL" sticker onto '.$matches[1].'\'s forehead'); sleep(2); $this->privmsg($matches[1].' is now an official nub.'); } else { $this->deny(); }
-^how do you type so fast\? >> BECAUSE I AM A BOT!
+^(how|why) do you type so fast\? >> BECAUSE I AM A BOT!
 ^goodnight(|\!|\.)$ >> G'night, _sender_.
 ^poke (.*)$ >> (function) >> $this->deny();
 ^you idiot(|\!|\.)$ >> Sozzie..
 ^you be nice(|\!|\.)$ >> WHAT IF I DON'T WANT TO BE NICE?
 ^what the hell(|\!|\.|\?)$ >> <.<;; >> v_v; >> T_T
-^how do you know (.*)$ >> I interface with Google. >> I asked Google. >> Because someone told me it was so?
+^how do you know(.*)$ >> I interface with Google. >> I asked Google. >> Because someone told me it was so?
 ^are you evil(|\?)$ >> 98% pure evil. >> Uhhh... >> If I told you, I'd have to kill you. >> ...I learned from the best.
-^.*meaning of life.* >> 43.  ...wait, wait, it was 13, wasn't it? >> Duh!  42.
+^.*meaning of life.* >> 43.  ...wait, wait, it was 13, wasn't it? >> Duh!  42. >> There is a meaning to life? Since when?
+^source$ >> http://my-trac.assembla.com/failnet/
+^docs$ >> http://www.assembla.com/wiki/show/failnet/
+^are you a bot(|\?)$ >> _action_shrugs
+^sex(|\.|\!|\?)$ >> Don't taunt me! >> p_p >> I wish I could..
+^monacle$ >> Monacle man to the rescue! >> He saves us from all those awkward silences! >> o_q
+^wins(|\!|\.)$ >> \o/

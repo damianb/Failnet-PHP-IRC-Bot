@@ -42,4 +42,5 @@ IF NOT EXIST %CHECKFILE% GOTO EOF
 
 :: Time to go bye-bye.
 :EOF
+::PAUSE
 EXIT
