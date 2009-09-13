@@ -16,10 +16,10 @@
 ::
 
 :: Where is the PHP executable located?
-SET PHP=D:\Backup of Homeoffice\Damian docs
+SET PHP=
 
 :: Where is the bot located?
-SET BOT=D:\Backup of Homeoffice\Damian docs\botdir
+SET BOT=
 
 :RUN
 
