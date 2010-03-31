@@ -6,7 +6,7 @@
  *  Failnet -- PHP-based IRC Bot
  *-------------------------------------------------------------------
  *	Script info:
- * Version:		2.0.0 Alpha 2
+ * Version:		2.0.0 Alpha 1
  * Copyright:	(c) 2009 - 2010 -- Failnet Project
  * License:		GNU General Public License - Version 2
  *
@@ -29,17 +29,15 @@
  */
 
 // Version
-define('FAILNET_VERSION', '2.0.0A2');
+define('FAILNET_VERSION', '2.0.0A1');
 
-// Output levels
 define('OUTPUT_SILENT', 0);
 define('OUTPUT_NORMAL', 1);
 define('OUTPUT_DEBUG', 2);
 define('OUTPUT_DEBUG_FULL', 3);
 define('OUTPUT_RAW', 4);
-define('OUTPUT_SPAM', 4); // ;D
+//define('OUTPUT_SPAM', 4); // ;D
 
-// @depreciated
 define('MSG_NORMAL', 0);
 define('MSG_DEBUG', 2);
 define('MSG_DEBUG_EXTRA', 3);

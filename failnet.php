@@ -7,7 +7,7 @@
  *  Failnet -- PHP-based IRC Bot
  *-------------------------------------------------------------------
  *	Script info:
- * Version:		2.0.0 Alpha 2
+ * Version:		2.0.0 Alpha 1
  * Copyright:	(c) 2009 - 2010 -- Failnet Project
  * License:		GNU General Public License - Version 2
  *
@@ -32,14 +32,15 @@
 // Define the root path constant first.  :D
 define('FAILNET_ROOT', './');
 
-// Now let's grab some essential files, first
+// Now let's grab /every/ constant
 require FAILNET_ROOT . 'includes/constants.php';
-require FAILNET_ROOT . 'includes/common.php';
-require FAILNET_ROOT . 'includes/autoload.php';
+
+// Include our general functions file now -- We require it as it is always essential.
+// It also has our autoloader function, so we kinda need that.  ;)
 require FAILNET_ROOT . 'includes/functions.php';
 
 // Set our autoload function.
-failnet_autoload::register();
+spl_autoload_register('failnet_load_file');
 
 // Check to see if we are even on the minimum PHP version necessary.
 if(version_compare('5.2.3', PHP_VERSION, '>'))

@@ -6,7 +6,7 @@
  *  Failnet -- PHP-based IRC Bot
  *-------------------------------------------------------------------
  *	Script info:
- * Version:		2.0.0 Alpha 2
+ * Version:		2.0.0 Alpha 1
  * Copyright:	(c) 2009 - 2010 -- Failnet Project
  * License:		GNU General Public License - Version 2
  *
@@ -43,6 +43,13 @@
  */
 class failnet_event_request implements ArrayAccess
 {
+	/**
+	 * Constants for Failnet.
+	 */
+	const HR = '---------------------------------------------------------------------';
+	const ERROR_LOG = 'error';
+	const USER_LOG = 'user';
+
 	/**
 	 * Event types
 	 */
@@ -176,6 +183,21 @@ class failnet_event_request implements ArrayAccess
 	public function source()
 	{
 		return ($this->fromchannel) ? $this->arguments[0] : $this->hostmask->nick;
+	}
+
+	/**
+	 * Returns whether or not the event occurred within a channel.
+	 *
+	 * @return TRUE if the event is in a channel, FALSE otherwise
+	 *
+	 * @deprecated
+	 */
+	public function fromchannel()
+	{
+		global $failnet;
+		$trace = debug_backtrace();
+		$failnet->ui->ui_debug('Depreciated method failnet_event_request::fromchannel() called (the property failnet_event_request::fromchannel should be used instead) in ' . $trace[0]['file'] .' on line ' . $trace[0]['line'], E_USER_NOTICE);
+		return $this->fromchannel;
 	}
 
 	/**

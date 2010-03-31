@@ -6,7 +6,7 @@
  *  Failnet -- PHP-based IRC Bot
  *-------------------------------------------------------------------
  *	Script info:
- * Version:		2.0.0 Alpha 2
+ * Version:		2.0.0 Alpha 1
  * Copyright:	(c) 2009 - 2010 -- Failnet Project
  * License:		GNU General Public License - Version 2
  *
@@ -102,7 +102,7 @@ class failnet_log extends failnet_common
 			$log_msg = '';
 			$log_msg = implode(PHP_EOL, $this->log). PHP_EOL;
 			$this->log = array();
-			$this->write('user', time(), $log_msg);
+			$this->write(self::USER_LOG, time(), $log_msg);
 		}
 	}
 
