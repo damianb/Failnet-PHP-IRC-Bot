@@ -6,7 +6,7 @@
  *  Failnet -- PHP-based IRC Bot
  *-------------------------------------------------------------------
  *	Script info:
- * Version:		2.0.0 Alpha 2
+ * Version:		2.0.0 Alpha 1
  * Copyright:	(c) 2009 - 2010 -- Failnet Project
  * License:		GNU General Public License - Version 2
  *
@@ -73,6 +73,9 @@ return array(
 		'tools',
 		'offense',
 	),
+
+// UI system to use...most of the time this should be "terminal"
+	'ui'				=> 'terminal',
 
 // What is the nickname service bot? If there isn't, leave this as an empty string.
 	'nickbot'			=> 'NickServ',

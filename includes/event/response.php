@@ -6,7 +6,7 @@
  *  Failnet -- PHP-based IRC Bot
  *-------------------------------------------------------------------
  *	Script info:
- * Version:		2.0.0 Alpha 2
+ * Version:		2.0.0 Alpha 1
  * Copyright:	(c) 2009 - 2010 -- Failnet Project
  * License:		GNU General Public License - Version 2
  *
@@ -32,17 +32,24 @@
 
 /**
  * Failnet - IRC response event handling class
- *
+ * 
  *
  * @package connection
  * @author Obsidian
  * @copyright (c) 2009 - 2010 -- Failnet Project
  * @license GNU General Public License - Version 2
- *
+ * 
  * @see http://www.irchelp.org/irchelp/rfc/chapter6.html
  */
 class failnet_event_response
 {
+	/**
+	 * Constants for Failnet.
+	 */
+	const HR = '---------------------------------------------------------------------';
+	const ERROR_LOG = 'error';
+	const USER_LOG = 'user';
+	
 	/**
 	 * <nickname> :No such nick/channel
 	 *
@@ -865,26 +872,33 @@ class failnet_event_response
 	const RPL_ADMINEMAIL = '259';
 
 	/**
-	 * @var string - Reply code sent by the server, which can be compared to the ERR_ * and RPL_ * constants
+	 * Reply code sent by the server, which can be compared to the ERR_ * and
+	 * RPL_ * constants
+	 *
+	 * @var string
 	 */
 	public $code;
 
 	/**
-	 * @var string - Reply code description sent by the server.
+	 * Reply code description sent by the server.
+	 *
+	 * @var string
 	 */
 	public $description;
 
 	/**
-	 * @var string - The raw buffer that was sent by the server
+	 * The raw buffer that was sent by the server
+	 *
+	 * @var string
 	 */
 	public $buffer;
-
+	
 	/**
-	 * Constructor
+	 * Constructor 
 	 * @return void
 	 */
 	public function __construct() { }
-
+	
 	public function __call($funct, $params)
 	{
 		trigger_error('Call to undefined method "' . $name . '" in class "' . __CLASS__ . '"', E_USER_WARNING);

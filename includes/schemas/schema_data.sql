@@ -1,4 +1,3 @@
-<?php
 /**
  *
  *===================================================================
@@ -30,40 +29,7 @@
 
 
 /**
- * Failnet - Help class,
- * 		Failnet's handler for the dynamic help system
- *
- *
- * @package nodes
- * @author Obsidian
- * @copyright (c) 2009 - 2010 -- Failnet Project
- * @license GNU General Public License - Version 2
+ * Default schema data
  */
-class failnet_help extends failnet_common
-{
-	public $index = array();
-
-	public $commands = array();
-
-	/**
-	 * Specialized init function to allow class construction to be easier.
-	 * @see includes/failnet_common#init()
-	 * @return void
-	 */
-	public function init() { }
-
-	public function collect($name, $commands)
-	{
-		$commands_index = array();
-		foreach($commands as $c_name => $c_value)
-		{
-			$commands_index[] = $c_name;
-			if(isset($this->commands[$c_name]))
-			{
-				$this->failnet->ui->ui_debug('Duplicate command name within dynamic help system detected');
-			}
-			$this->commands[$c_name] = $c_value;
-		}
-		$this->index[$name] = $commands_index;
-	}
-}
+INSERT INTO config (name, value) VALUES ('rand_seed', 0);
+INSERT INTO config (name, value) VALUES ('last_rand_seed', 0);

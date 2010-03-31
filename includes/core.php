@@ -6,7 +6,7 @@
  *  Failnet -- PHP-based IRC Bot
  *-------------------------------------------------------------------
  *	Script info:
- * Version:		2.0.0 Alpha 2
+ * Version:		2.0.0 Alpha 1
  * Copyright:	(c) 2009 - 2010 -- Failnet Project
  * License:		GNU General Public License - Version 2
  *
@@ -120,6 +120,9 @@ class failnet_core
 /**
  * Failnet core constants
  */
+	const HR = '---------------------------------------------------------------------';
+	const ERROR_LOG = 'error';
+	const USER_LOG = 'user';
 
 	/**
 	 * IRC mode flags
@@ -187,8 +190,8 @@ class failnet_core
 
 		// Prepare the UI...
 		define('OUTPUT_LEVEL', $this->config('output'));
-		// Manually load our UI first.
-		$this->ui = new failnet_ui($this);
+		$ui = 'failnet_ui_' . $this->config('ui');
+		$this->ui = new $ui($this);
 
 		// Fire off the startup text.
 		$this->ui->ui_startup();
@@ -212,7 +215,7 @@ class failnet_core
 		// Check to see if our rand_seed exists, and if not we need to execute our schema file (as long as it exists of course). :)
 		$this->sql('config', 'get')->execute(array(':name' => 'rand_seed'));
 		$rand_seed_exists = $this->sql('config', 'get')->fetch(PDO::FETCH_ASSOC);
-		if(!$rand_seed_exists && file_exists(FAILNET_ROOT . 'schemas/schema_data.sql'))
+		if(!$rand_seed_exists && file_exists(FAILNET_ROOT . 'includes/schemas/schema_data.sql'))
 		{
 			try
 			{
@@ -223,7 +226,7 @@ class failnet_core
 				$this->sql('users', 'create')->execute(array(':nick' => $this->config('owner'), ':authlevel' => 100, ':hash' => $this->hash->hash($this->config('user'))));
 
 				// Now let's add some default data to the database tables
-				$this->db->exec(file_get_contents(FAILNET_ROOT . 'schemas/schema_data.sql'));
+				$this->db->exec(file_get_contents(FAILNET_ROOT . 'includes/schemas/schema_data.sql'));
 
 				$this->db->commit();
 			}
@@ -303,7 +306,7 @@ class failnet_core
 			$this->ui->ui_system('- Initializing the database');
 
 			// Load up the list of files that we've got, and do stuff with them.
-			$schemas = scandir(FAILNET_ROOT . 'schemas');
+			$schemas = scandir(FAILNET_ROOT . 'includes/schemas');
 			foreach($schemas as $schema)
 			{
 				if(substr($schema, 0, 1) == '.' || substr(strrchr($schema, '.'), 1) != 'sql' || $schema == 'schema_data.sql')
@@ -314,7 +317,7 @@ class failnet_core
 				if(!$results)
 				{
 					display(' -  Installing the ' . $tablename . ' database table...');
-					$this->db->exec(file_get_contents(FAILNET_ROOT . 'schemas/' . $schema));
+					$this->db->exec(file_get_contents(FAILNET_ROOT . 'includes/schemas/' . $schema));
 				}
 			}
 
@@ -405,8 +408,8 @@ class failnet_core
 				else
 				{
 					$eventtype = $event->type;
+					$this->ui->ui_raw($event->buffer);
 				}
-				$this->ui->ui_raw($event->buffer);
 			}
 
 			// Check to see if the user that generated the event is ignored.
@@ -509,6 +512,21 @@ class failnet_core
 			$this->ui->ui_shutdown();
 			exit(1);
 		}
+	}
+
+	/**
+	 * Get a setting from Failnet's configuration settings
+	 * @param string $setting - The config setting that we want to pull the value for.
+	 * @param boolean $config_only - Is this an entry that only appears in the config file?
+	 * @return mixed - The setting's value, or null if no such setting.
+	 *
+	 * @depreciated
+	 */
+	public function get($setting, $config_only = false)
+	{
+		$trace = debug_backtrace();
+		$this->ui->ui_debug('Depreciated method failnet_core::get() called (the method failnet_core::config() should be used instead) in ' . $trace[0]['file'] .' on line ' . $trace[0]['line'], E_USER_NOTICE);
+		return $this->config($setting, $config_only);
 	}
 
 	/**
