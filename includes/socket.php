@@ -244,7 +244,9 @@ class failnet_socket extends failnet_common
 		}
 
 		// Transmit the command over the socket connection
-		fwrite($this->socket, $buffer . "\r\n");
+		$success = fwrite($this->socket, $buffer . "\r\n");
+		if($success === false)
+			throw_fatal('fwrite() failed, socket connection lost');
 
 		// Return the command string that was transmitted
 		return $buffer;
