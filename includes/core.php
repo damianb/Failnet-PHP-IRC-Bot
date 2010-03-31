@@ -223,7 +223,7 @@ class failnet_core
 
 				// @todo move to authorize plugin/node
 				// Add the default user if Failnet was just installed
-				$this->sql('users', 'create')->execute(array(':nick' => $this->config('owner'), ':authlevel' => 100, ':hash' => $this->hash->hash($this->config('user'))));
+				$this->sql('users', 'create')->execute(array(':nick' => $this->config('owner'), ':authlevel' => self::AUTH_OWNER, ':hash' => $this->hash->hash($this->config('user'))));
 
 				// Now let's add some default data to the database tables
 				$this->db->exec(file_get_contents(FAILNET_ROOT . 'includes/schemas/schema_data.sql'));
