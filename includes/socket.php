@@ -96,6 +96,8 @@ class failnet_socket extends failnet_common
 	{
 		// Check for a new event on the current connection
 		$buffer = fgets($this->socket, 512);
+		if($buffer === false)
+			throw_fatal('fgets() failed, socket connection lost');
 
 		// If no new event was found, return NULL
 		if (empty($buffer))
