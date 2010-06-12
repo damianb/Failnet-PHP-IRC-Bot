@@ -47,7 +47,7 @@ class failnet_socket extends failnet_common
 	 * See /README for details.
 	 */
 
-	private $delay = 50000;
+	private $timeout = 0.5;
 	public $socket = NULL;
 
 	/**
@@ -76,7 +76,7 @@ class failnet_socket extends failnet_common
 		if(!$this->socket)
 			throw_fatal('Unable to connect to server: socket error ' . $errno . ' : ' . $errstr, E_USER_ERROR);
 
-		@stream_set_timeout($this->socket, $this->delay);
+		stream_set_timeout($this->socket, (int) $this->timeout, (($this->timeout - (int) $this->timeout) * 1000000));
 
 		// Send the password if one is specified
 		if(is_null($this->failnet->config('server_pass')) || !$this->failnet->config('server_pass'))
@@ -244,8 +244,7 @@ class failnet_socket extends failnet_common
 		}
 
 		// Transmit the command over the socket connection
-		$success = fwrite($this->socket, $buffer . "\r\n");
-		if($success === false)
+		if(!fwrite($this->socket, $buffer . "\r\n"))
 			throw_fatal('fwrite() failed, socket connection lost');
 
 		// Return the command string that was transmitted
