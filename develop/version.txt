@@ -1,2 +1,2 @@
-2.0.0A1
-http://failnet.assembla.com/wiki/show/failnet
+2.0.1
+http://github.com/obsidian1510/Failnet-PHP-IRC-Bot/downloads
