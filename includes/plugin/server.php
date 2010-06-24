@@ -49,7 +49,7 @@ class failnet_plugin_server extends failnet_plugin_common
 				$chanargs = explode(' ', $this->event->description);
 
 				// Only do the intro message if we're allowed to speak.
-				if($this->failnet->speak)
+				if($this->failnet->speak && $this->failnet->config('intro_msg'))
 					$this->call_privmsg($chanargs[0], $this->failnet->config('intro_msg'));
 			break;
 
