@@ -108,7 +108,7 @@ class failnet_plugin_admin extends failnet_plugin_common
 				if(($this->dai + 60) < time())
 				{
 					$this->dai = time();
-					$this->msg('Are you sure? If so, please repeat '  . $this->failnet->config('cmd_prefix') . 'dai.');
+					$this->msg('Are you sure? If so, please repeat ' . $this->failnet->config('cmd_prefix') . 'dai.');
 				}
 				else
 				{
