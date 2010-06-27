@@ -413,7 +413,7 @@ class failnet_core
 			}
 
 			// Check to see if the user that generated the event is ignored.
-			if($eventtype != 'response' && isset($this->ignore) && $this->ignore->ignored($event->hostmask))
+			if($event && $eventtype != 'response' && isset($this->ignore) && $this->ignore->ignored($event->hostmask))
 			{
 				$this->ui->ui_event('ignored event from hostmask: ' . $event->hostmask);
 				continue;
