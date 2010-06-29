@@ -113,7 +113,7 @@ class failnet_plugin_admin extends failnet_plugin_common
 				else
 				{
 					// Okay, we've confirmed it.  Time to go to sleep.
-					if($this->failnet->config('speak'))
+					if($this->failnet->config('speak') && $this->failnet->config('dai_msg'))
 					{
 						foreach($this->failnet->chans as $channame => $chan)
 						{
@@ -207,7 +207,7 @@ class failnet_plugin_admin extends failnet_plugin_common
 				if($text === false && $this->event->fromchannel === true)
 				{
 					// Annouce the channel part if we're allowed to speak.
-					if($this->failnet->config('speak'))
+					if($this->failnet->config('speak') && $this->failnet->config('part_msg'))
 						$this->msg($this->failnet->config('part_msg'));
 					$this->call_part($this->event->source(), $this->failnet->config('quit_msg'));
 				}
@@ -216,7 +216,7 @@ class failnet_plugin_admin extends failnet_plugin_common
 					if($this->failnet->server->in_channel($this->failnet->nick, $text))
 					{
 						// Annouce the channel part if we're allowed to speak.
-						if($this->failnet->config('speak'))
+						if($this->failnet->config('speak') && $this->failnet->config('part_msg'))
 							$this->call_privmsg($text, $this->failnet->config('part_msg'));
 						$this->call_part($text, $this->failnet->config('quit_msg'));
 					}
